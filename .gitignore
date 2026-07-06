@@ -1,0 +1,5 @@
+shopping_config.json
+lists_data.json
+push_log.txt
+__pycache__/
+*.pyc

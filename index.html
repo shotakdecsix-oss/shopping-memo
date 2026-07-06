@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🛒 買い物メモ</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card2: #22263a;
+    --border: #2e3350;
+    --accent: #6c8aff;
+    --green: #4caf82;
+    --gold: #f5c842;
+    --red: #e05c5c;
+    --text: #e8eaf6;
+    --muted: #8891b0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    min-height: 100vh;
+    padding: 20px 14px 60px;
+  }
+  .header { text-align: center; margin-bottom: 18px; }
+  .header h1 { font-size: 1.5rem; font-weight: 800; }
+  .header p { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+
+  main { max-width: 560px; margin: 0 auto; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .add-row { display: flex; gap: 8px; }
+  input[type=text] {
+    flex: 1;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 16px;
+    padding: 12px;
+    outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  select {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: .82rem;
+    padding: 6px 8px;
+    outline: none;
+  }
+  button {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-add {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0 20px;
+  }
+  .btn-add:disabled { opacity: .5; }
+  .btn-share {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .82rem;
+    padding: 9px;
+    margin-top: 10px;
+  }
+  .btn-share:hover { border-color: var(--accent); color: var(--accent); }
+
+  .store-section { margin-bottom: 18px; }
+  .store-title {
+    font-size: .95rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-group { margin-bottom: 10px; }
+  .cat-title {
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+  }
+  .item-check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--muted);
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem;
+    color: transparent;
+    transition: background .15s, border-color .15s;
+  }
+  .item-check:hover { border-color: var(--green); }
+  .item-check.checking { background: var(--green); border-color: var(--green); color: #fff; }
+  .item-main { flex: 1; min-width: 0; }
+  .item-name { font-size: .92rem; font-weight: 600; }
+  .item-meta { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+  .item-cat-btn {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .7rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .item-cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .empty-hint { color: var(--muted); font-size: .85rem; text-align: center; padding: 24px 0; }
+
+  .freq-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .freq-chip {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: .8rem;
+    padding: 8px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .freq-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 10px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: .82rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 24px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ---- Modal ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .modal-title { font-size: 1rem; font-weight: 800; margin-bottom: 12px; }
+  .modal-row { margin-bottom: 12px; }
+  .modal-row label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 6px; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+  .modal-btns button { flex: 1; padding: 11px; font-size: .88rem; font-weight: 700; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--card2); border: 1px solid var(--border); color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛒 買い物メモ</h1>
+  <p id="deploy-info" style="font-size:.65rem;color:var(--border)"></p>
+</div>
+
+<main>
+  <div class="card">
+    <div class="add-row">
+      <input type="text" id="item-input" placeholder="例: 牛乳、シャンプー…" enterkeyhint="done">
+      <button class="btn-add" id="add-btn">＋</button>
+    </div>
+    <button class="btn-share" id="share-btn">🔗 このリストのURLを共有（コピー）</button>
+  </div>
+
+  <div class="card" id="freq-card" style="display:none">
+    <div class="section-label">🔁 よく買うもの（タップで追加）</div>
+    <div class="freq-wrap" id="freq-wrap"></div>
+  </div>
+
+  <div id="lists"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- ニックネーム設定モーダル -->
+<div class="modal-overlay" id="nickname-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">👋 はじめまして</div>
+    <div class="modal-row">
+      <label>あなたの呼び名（例: 夫、妻、たろう）</label>
+      <input type="text" id="nickname-input" placeholder="呼び名を入力">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-primary" id="nickname-save" style="width:100%">はじめる</button>
+    </div>
+  </div>
+</div>
+
+<!-- カテゴリ変更モーダル -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="cat-modal-title">カテゴリを変更</div>
+    <div class="modal-row">
+      <label>店タイプ</label>
+      <select id="cat-store" style="width:100%"></select>
+    </div>
+    <div class="modal-row">
+      <label>売り場カテゴリ</label>
+      <select id="cat-category" style="width:100%"></select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-secondary" id="cat-cancel">キャンセル</button>
+      <button class="btn-primary" id="cat-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var listId = (location.pathname.match(/\/l\/([a-zA-Z0-9]+)/) || [])[1];
+  if (!listId) {
+    // ルート直アクセス時はサーバー側でリダイレクトされるはずだが、念のため
+    location.href = '/';
+  }
+
+  var STORE_CATEGORIES = {};
+  var STORE_ORDER = [];
+  var nickname = localStorage.getItem('shopping_nickname') || '';
+  var currentData = { items: [], frequent: [] };
+  var editingItemId = null;
+  var pollTimer = null;
+
+  var $ = function(id) { return document.getElementById(id); };
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function(){ el.classList.remove('show'); }, 1800);
+  }
+
+  // ---- 初期化 ----
+  fetch('/api/version').then(function(r){ return r.json(); }).then(function(d){
+    $('deploy-info').textContent = 'deployed: ' + d.deployed_at;
+  }).catch(function(){});
+
+  fetch('/api/meta').then(function(r){ return r.json(); }).then(function(d){
+    STORE_CATEGORIES = d.store_categories;
+    STORE_ORDER = Object.keys(STORE_CATEGORIES);
+    buildCatSelects();
+    refresh();
+    pollTimer = setInterval(refresh, 4000);
+  });
+
+  if (!nickname) {
+    $('nickname-modal').classList.add('open');
+  }
+  $('nickname-save').onclick = function() {
+    var v = $('nickname-input').value.trim();
+    nickname = v || '名無し';
+    localStorage.setItem('shopping_nickname', nickname);
+    $('nickname-modal').classList.remove('open');
+  };
+
+  // ---- 一覧取得・描画 ----
+  function refresh() {
+    fetch('/api/list/' + listId)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        currentData = data;
+        render();
+      })
+      .catch(function(){});
+  }
+
+  function render() {
+    renderFrequent();
+    renderItems();
+  }
+
+  function renderFrequent() {
+    var freq = currentData.frequent || [];
+    var card = $('freq-card');
+    var wrap = $('freq-wrap');
+    if (!freq.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    wrap.innerHTML = freq.map(function(f) {
+      return '<button class="freq-chip" onclick="quickAdd(\'' + esc(f.name).replace(/'/g,"\\'") + '\')">＋ ' + esc(f.name) + '</button>';
+    }).join('');
+  }
+
+  function renderItems() {
+    var el = $('lists');
+    var items = currentData.items || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-hint">買うものがありません。上の入力欄から追加してください🛒</div>';
+      return;
+    }
+
+    var html = '';
+    STORE_ORDER.forEach(function(store) {
+      var storeItems = items.filter(function(it){ return it.store === store; });
+      if (!storeItems.length) return;
+      html += '<div class="store-section"><div class="store-title">' + esc(store) + '</div>';
+      (STORE_CATEGORIES[store] || []).forEach(function(cat) {
+        var catItems = storeItems.filter(function(it){ return it.category === cat; });
+        if (!catItems.length) return;
+        html += '<div class="cat-group"><div class="cat-title">' + esc(cat) + '</div>';
+        catItems.forEach(function(it) {
+          html += '<div class="item-row">'
+            + '<div class="item-check" onclick="checkItem(\'' + it.id + '\', this)">✓</div>'
+            + '<div class="item-main">'
+            + '<div class="item-name">' + esc(it.name) + '</div>'
+            + '<div class="item-meta">' + (it.added_by ? esc(it.added_by) + ' が追加' : '') + '</div>'
+            + '</div>'
+            + '<button class="item-cat-btn" onclick="openCatModal(\'' + it.id + '\')">' + esc(it.category) + ' ▾</button>'
+            + '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html || '<div class="empty-hint">買うものがありません。上の入力欄から追加してください🛒</div>';
+  }
+
+  // ---- 商品追加 ----
+  $('add-btn').onclick = addItem;
+  $('item-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addItem();
+  });
+
+  function addItem() {
+    var input = $('item-input');
+    var name = input.value.trim();
+    if (!name) return;
+    $('add-btn').disabled = true;
+    fetch('/api/list/' + listId + '/items', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name: name, nickname: nickname })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast('⚠ ' + data.error); return; }
+      input.value = '';
+      currentData = data;
+      render();
+    })
+    .catch(function(){ showToast('⚠ 通信エラー'); })
+    .finally(function(){ $('add-btn').disabled = false; });
+  }
+
+  function quickAdd(name) {
+    fetch('/api/list/' + listId + '/frequent/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name: name, nickname: nickname })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast('⚠ ' + data.error); return; }
+      currentData = data;
+      render();
+      showToast('✓ ' + name + ' を追加');
+    });
+  }
+
+  // ---- チェック（購入済み） ----
+  function checkItem(id, el) {
+    el.classList.add('checking');
+    fetch('/api/list/' + listId + '/items/' + id + '/check', { method: 'POST' })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        currentData = data;
+        render();
+      });
+  }
+
+  // ---- カテゴリ変更 ----
+  function buildCatSelects() {
+    var storeSel = $('cat-store');
+    storeSel.innerHTML = STORE_ORDER.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    storeSel.onchange = function() { fillCategorySelect(storeSel.value); };
+    fillCategorySelect(STORE_ORDER[0]);
+  }
+  function fillCategorySelect(store) {
+    var catSel = $('cat-category');
+    var cats = STORE_CATEGORIES[store] || [];
+    catSel.innerHTML = cats.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+  }
+
+  function openCatModal(itemId) {
+    editingItemId = itemId;
+    var item = (currentData.items || []).find(function(it){ return it.id === itemId; });
+    if (!item) return;
+    $('cat-modal-title').textContent = esc(item.name) + ' のカテゴリ';
+    $('cat-store').value = item.store;
+    fillCategorySelect(item.store);
+    $('cat-category').value = item.category;
+    $('cat-modal').classList.add('open');
+  }
+  $('cat-cancel').onclick = function() { $('cat-modal').classList.remove('open'); };
+  $('cat-save').onclick = function() {
+    var store = $('cat-store').value;
+    var category = $('cat-category').value;
+    fetch('/api/list/' + listId + '/items/' + editingItemId + '/category', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ store: store, category: category })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      currentData = data;
+      render();
+      $('cat-modal').classList.remove('open');
+    });
+  };
+
+  // ---- 共有 ----
+  $('share-btn').onclick = function() {
+    var url = location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function(){ showToast('✓ URLをコピーしました'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+      showToast('✓ URLをコピーしました');
+    }
+  };
+</script>
+</body>
+</html>

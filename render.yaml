@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: shopping-memo
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 60 --workers 1 --threads 4
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: MODEL
+        value: claude-haiku-4-5
