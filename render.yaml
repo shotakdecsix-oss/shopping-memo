@@ -2,6 +2,7 @@ services:
   - type: web
     name: shopping-memo
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 60 --workers 1 --threads 4
     envVars:
