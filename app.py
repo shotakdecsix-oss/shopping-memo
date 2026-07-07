@@ -9,6 +9,7 @@ import os
 import threading
 import uuid
 import anthropic
+import requests
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from datetime import datetime, timezone, timedelta
 
@@ -17,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "shopping_config.json")
-DATA_PATH = os.path.join(BASE_DIR, "lists_data.json")
+DATA_PATH = os.path.join(BASE_DIR, "lists_data.json")  # Supabase未設定時のローカル用フォールバック
 
 CFG = {}
 if os.path.exists(CONFIG_PATH):
@@ -27,6 +28,18 @@ if os.path.exists(CONFIG_PATH):
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY") or CFG.get("anthropic_api_key", "")
 MODEL         = os.environ.get("MODEL")              or CFG.get("model", "claude-haiku-4-5")
 PORT          = int(os.environ.get("PORT", CFG.get("port", 5053)))
+
+# Supabase（永続DB。Render無料プランは休止のたびにローカルディスクが消えるため、
+# データ本体はSupabaseに保存し、ローカルJSONファイルは未設定時のフォールバックとしてのみ使う）
+SUPABASE_URL = os.environ.get("SUPABASE_URL") or CFG.get("supabase_url", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY") or CFG.get("supabase_service_key", "")
+USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_KEY)
+SUPABASE_TABLE_URL = f"{SUPABASE_URL}/rest/v1/shopping_lists" if SUPABASE_URL else ""
+SUPABASE_HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+}
 
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 app = Flask(__name__, static_folder=BASE_DIR)
@@ -46,11 +59,13 @@ STORE_CATEGORIES = {
 STORE_TYPES = list(STORE_CATEGORIES.keys())
 
 # ---------------------------------------------------------------------------
-# データ永続化（リストIDごとに items / frequent を保持。ファイルベース）
+# データ永続化
+# 本番(Render)はSupabaseに保存（休止・再起動してもデータが消えない）
+# Supabase未設定（ローカル開発など）の場合はローカルJSONファイルにフォールバック
 # ---------------------------------------------------------------------------
 _data_lock = threading.Lock()
 
-def _load_data() -> dict:
+def _load_file_data() -> dict:
     if not os.path.exists(DATA_PATH):
         return {}
     try:
@@ -59,20 +74,53 @@ def _load_data() -> dict:
     except Exception:
         return {}
 
-def _save_data(data: dict) -> None:
+def _save_file_data(data: dict) -> None:
     tmp_path = DATA_PATH + ".tmp"
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp_path, DATA_PATH)
 
-_DATA = _load_data()
+_FILE_DATA = _load_file_data() if not USE_SUPABASE else {}
+
 
 def _get_list(list_id: str) -> dict:
     with _data_lock:
-        if list_id not in _DATA:
-            _DATA[list_id] = {"items": [], "frequent": []}
-            _save_data(_DATA)
-        return _DATA[list_id]
+        if USE_SUPABASE:
+            r = requests.get(
+                SUPABASE_TABLE_URL,
+                headers=SUPABASE_HEADERS,
+                params={"list_id": f"eq.{list_id}", "select": "items,frequent"},
+                timeout=10,
+            )
+            r.raise_for_status()
+            rows = r.json()
+            if rows:
+                row = rows[0]
+                return {"items": row.get("items") or [], "frequent": row.get("frequent") or []}
+            # 新規リスト作成
+            new_row = {"list_id": list_id, "items": [], "frequent": []}
+            requests.post(SUPABASE_TABLE_URL, headers=SUPABASE_HEADERS, json=new_row, timeout=10)
+            return {"items": [], "frequent": []}
+        else:
+            if list_id not in _FILE_DATA:
+                _FILE_DATA[list_id] = {"items": [], "frequent": []}
+                _save_file_data(_FILE_DATA)
+            return _FILE_DATA[list_id]
+
+
+def _save_list(list_id: str, lst: dict) -> None:
+    with _data_lock:
+        if USE_SUPABASE:
+            requests.patch(
+                SUPABASE_TABLE_URL,
+                headers=SUPABASE_HEADERS,
+                params={"list_id": f"eq.{list_id}"},
+                json={"items": lst["items"], "frequent": lst["frequent"]},
+                timeout=10,
+            )
+        else:
+            _FILE_DATA[list_id] = lst
+            _save_file_data(_FILE_DATA)
 
 # ---------------------------------------------------------------------------
 # Claude によるカテゴリ分類
@@ -176,9 +224,8 @@ def add_item(list_id):
         "added_by": nickname,
         "added_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
     }
-    with _data_lock:
-        lst["items"].append(item)
-        _save_data(_DATA)
+    lst["items"].append(item)
+    _save_list(list_id, lst)
     return jsonify(lst)
 
 
@@ -191,30 +238,28 @@ def update_category(list_id, item_id):
         return jsonify({"error": "不正なカテゴリです"}), 400
 
     lst = _get_list(list_id)
-    with _data_lock:
-        for it in lst["items"]:
-            if it["id"] == item_id:
-                it["store"] = store
-                it["category"] = category
-                break
-        _save_data(_DATA)
+    for it in lst["items"]:
+        if it["id"] == item_id:
+            it["store"] = store
+            it["category"] = category
+            break
+    _save_list(list_id, lst)
     return jsonify(lst)
 
 
 @app.route("/api/list/<list_id>/items/<item_id>/check", methods=["POST"])
 def check_item(list_id, item_id):
     lst = _get_list(list_id)
-    with _data_lock:
-        target = next((it for it in lst["items"] if it["id"] == item_id), None)
-        if target:
-            lst["items"] = [it for it in lst["items"] if it["id"] != item_id]
-            # よく買うものリストへ登録（重複は上書き更新のみ）
-            lst["frequent"] = [f for f in lst["frequent"] if f["name"] != target["name"]]
-            lst["frequent"].insert(0, {
-                "name": target["name"], "store": target["store"], "category": target["category"],
-            })
-            lst["frequent"] = lst["frequent"][:30]  # 上限30件
-        _save_data(_DATA)
+    target = next((it for it in lst["items"] if it["id"] == item_id), None)
+    if target:
+        lst["items"] = [it for it in lst["items"] if it["id"] != item_id]
+        # よく買うものリストへ登録（重複は上書き更新のみ）
+        lst["frequent"] = [f for f in lst["frequent"] if f["name"] != target["name"]]
+        lst["frequent"].insert(0, {
+            "name": target["name"], "store": target["store"], "category": target["category"],
+        })
+        lst["frequent"] = lst["frequent"][:30]  # 上限30件
+    _save_list(list_id, lst)
     return jsonify(lst)
 
 
@@ -236,18 +281,16 @@ def add_from_frequent(list_id):
         "added_by": nickname,
         "added_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
     }
-    with _data_lock:
-        lst["items"].append(item)
-        _save_data(_DATA)
+    lst["items"].append(item)
+    _save_list(list_id, lst)
     return jsonify(lst)
 
 
 @app.route("/api/list/<list_id>/frequent/<name>", methods=["DELETE"])
 def remove_frequent(list_id, name):
     lst = _get_list(list_id)
-    with _data_lock:
-        lst["frequent"] = [f for f in lst["frequent"] if f["name"] != name]
-        _save_data(_DATA)
+    lst["frequent"] = [f for f in lst["frequent"] if f["name"] != name]
+    _save_list(list_id, lst)
     return jsonify(lst)
 
 
