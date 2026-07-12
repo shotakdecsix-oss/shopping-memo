@@ -17,6 +17,18 @@
     --text: #e8eaf6;
     --muted: #8891b0;
     --radius: 12px;
+    --touch: 52px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f5f9;
+      --card: #ffffff;
+      --card2: #eef0f7;
+      --border: #d9dcea;
+      --accent: #4c6ef5;
+      --text: #1d2130;
+      --muted: #6b7390;
+    }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -24,174 +36,133 @@
     color: var(--text);
     font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
     min-height: 100vh;
-    padding: 20px 14px 60px;
   }
-  .header { text-align: center; margin-bottom: 18px; }
-  .header h1 { font-size: 1.5rem; font-weight: 800; }
-  .header p { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  button { border: none; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
 
-  main { max-width: 560px; margin: 0 auto; }
+  .phone { max-width: 560px; margin: 0 auto; min-height: 100vh; position: relative; }
 
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 16px;
+  /* ── ヘッダー ── */
+  header { padding: 16px 16px 0; }
+  .h-row { display: flex; align-items: center; justify-content: space-between; }
+  .h-row h1 { font-size: 1.1rem; font-weight: 800; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--border); color: var(--muted);
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
   }
+  .progress { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .progress b { color: var(--accent); font-size: .95rem; }
 
-  .add-row { display: flex; gap: 8px; }
-  input[type=text] {
-    flex: 1;
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 16px;
-    padding: 12px;
-    outline: none;
+  /* ── フィルタチップ ── */
+  .filters {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 12px 16px; background: var(--bg);
+    scrollbar-width: none;
   }
-  input[type=text]:focus { border-color: var(--accent); }
-  select {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: .82rem;
-    padding: 6px 8px;
-    outline: none;
+  .filters::-webkit-scrollbar { display: none; }
+  .fchip {
+    flex-shrink: 0; white-space: nowrap;
+    background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 8px 14px; font-size: .82rem; font-family: inherit;
   }
-  button {
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: inherit;
-    -webkit-tap-highlight-color: transparent;
+  .fchip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .fchip .n {
+    background: rgba(255,255,255,.25); border-radius: 999px;
+    font-size: .68rem; padding: 1px 6px; margin-left: 4px;
   }
-  .btn-add {
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding: 0 20px;
-  }
-  .btn-add:disabled { opacity: .5; }
-  .btn-share {
-    width: 100%;
-    background: var(--card2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: .82rem;
-    padding: 9px;
-    margin-top: 10px;
-  }
-  .btn-share:hover { border-color: var(--accent); color: var(--accent); }
+  .fchip:not(.on) .n { background: var(--card); color: var(--muted); }
 
-  .store-section { margin-bottom: 18px; }
-  .store-title {
-    font-size: .95rem;
-    font-weight: 800;
-    color: var(--gold);
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
+  /* ── リスト ── */
+  main { padding: 0 16px 170px; }
+  .store-head {
+    position: sticky; top: 56px; z-index: 40;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg); padding: 10px 0 6px;
+    font-size: .95rem; font-weight: 800; color: var(--gold);
+    border-bottom: 1px solid var(--border); margin-bottom: 8px;
   }
-  .cat-group { margin-bottom: 10px; }
+  .store-head .cnt { font-size: .7rem; color: var(--muted); font-weight: 600; }
   .cat-title {
-    font-size: .7rem;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin-bottom: 6px;
+    font-size: .7rem; font-weight: 700; color: var(--muted);
+    letter-spacing: .5px; margin: 10px 0 6px;
   }
-  .item-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
+  .item {
+    display: flex; align-items: center; gap: 12px; min-height: var(--touch);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 6px;
+    transition: opacity .3s;
   }
-  .item-check {
-    width: 22px; height: 22px;
-    border: 2px solid var(--muted);
-    border-radius: 50%;
-    flex-shrink: 0;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .8rem;
-    color: transparent;
-    transition: background .15s, border-color .15s;
+  .check {
+    width: 28px; height: 28px; border: 2px solid var(--muted); border-radius: 50%;
+    flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; color: transparent; transition: background .15s, border-color .15s;
   }
-  .item-check:hover { border-color: var(--green); }
-  .item-check.checking { background: var(--green); border-color: var(--green); color: #fff; }
-  .item-main { flex: 1; min-width: 0; }
-  .item-name { font-size: .92rem; font-weight: 600; }
-  .item-meta { font-size: .68rem; color: var(--muted); margin-top: 2px; }
-  .item-cat-btn {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: .7rem;
-    padding: 4px 8px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
+  .item.checked { opacity: .45; }
+  .item.checked .check { background: var(--green); border-color: var(--green); color: #fff; }
+  .item.checked .name { text-decoration: line-through; }
+  .imain { flex: 1; min-width: 0; }
+  .name { font-size: .92rem; font-weight: 600; }
+  .meta { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+  .catpill {
+    background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+    font-size: .7rem; padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+    font-family: inherit; flex-shrink: 0;
   }
-  .item-cat-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   .empty-hint { color: var(--muted); font-size: .85rem; text-align: center; padding: 24px 0; }
 
-  .freq-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-  .freq-chip {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: .8rem;
-    padding: 8px 14px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
+  /* ── 下部固定バー ── */
+  .bottom {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 560px; z-index: 100;
+    background: var(--bg); opacity: .98;
+    border-top: 1px solid var(--border);
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom));
   }
-  .freq-chip:hover { border-color: var(--accent); color: var(--accent); }
-  .section-label {
-    font-size: .72rem;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .6px;
-    margin-bottom: 10px;
+  .freq { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+  .freq::-webkit-scrollbar { display: none; }
+  .freq:empty { padding-bottom: 0; }
+  .freq-chip {
+    flex-shrink: 0; white-space: nowrap;
+    background: var(--card2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 7px 13px; font-size: .8rem; font-family: inherit;
+  }
+  .add-row { display: flex; gap: 8px; }
+  .add-row input {
+    flex: 1; background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: 16px; padding: 13px; outline: none;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .btn-add {
+    background: var(--accent); color: #fff; border-radius: 10px;
+    font-size: 1.2rem; font-weight: 700; padding: 0 22px;
+  }
+  .btn-add:disabled { opacity: .5; }
+
+  /* ── トースト（undo付き） ── */
+  .toast {
+    position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%);
+    background: var(--card2); border: 1px solid var(--accent);
+    border-radius: 999px; padding: 9px 16px; font-size: .82rem; z-index: 200;
+    display: flex; gap: 12px; align-items: center; white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    pointer-events: none; opacity: 0; transition: opacity .2s;
+  }
+  .toast.show { pointer-events: auto; opacity: 1; }
+  .toast button {
+    background: none; color: var(--accent); font-weight: 800;
+    font-size: .82rem;
   }
 
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--card2);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-size: .82rem;
-    font-weight: 600;
-    padding: 9px 18px;
-    border-radius: 24px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .2s;
-    z-index: 200;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; }
+  footer { text-align: center; font-size: 9px; color: var(--border); padding: 8px; }
 
   /* ---- Modal ---- */
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
     background: rgba(0,0,0,.65);
-    z-index: 100;
+    z-index: 300;
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -208,37 +179,55 @@
   .modal-title { font-size: 1rem; font-weight: 800; margin-bottom: 12px; }
   .modal-row { margin-bottom: 12px; }
   .modal-row label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 6px; }
+  .modal-row input[type=text], .modal-row select {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 16px;
+    padding: 12px;
+    outline: none;
+  }
+  .modal-row input[type=text]:focus, .modal-row select:focus { border-color: var(--accent); }
   .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
-  .modal-btns button { flex: 1; padding: 11px; font-size: .88rem; font-weight: 700; }
+  .modal-btns button { flex: 1; height: 48px; font-size: .88rem; font-weight: 700; border-radius: 8px; }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-secondary { background: var(--card2); border: 1px solid var(--border); color: var(--muted); }
 </style>
 </head>
 <body>
+<div class="phone">
 
-<div class="header">
-  <h1>🛒 買い物メモ</h1>
-  <p id="deploy-info" style="font-size:.65rem;color:var(--border)"></p>
-</div>
+  <header>
+    <div class="h-row">
+      <h1>🛒 買い物メモ</h1>
+      <button class="icon-btn" id="share-btn" title="URLを共有">🔗</button>
+    </div>
+    <div class="progress" id="progress">あと <b>0</b> 件</div>
+  </header>
 
-<main>
-  <div class="card">
+  <div class="filters" id="filters"></div>
+
+  <main>
+    <div id="lists"></div>
+    <footer id="deploy-footer"></footer>
+  </main>
+
+  <div class="toast" id="toast">
+    <span id="toast-msg"></span>
+    <button id="toast-action" style="display:none"></button>
+  </div>
+
+  <div class="bottom">
+    <div class="freq" id="freq-wrap"></div>
     <div class="add-row">
       <input type="text" id="item-input" placeholder="例: 牛乳、シャンプー…" enterkeyhint="done">
       <button class="btn-add" id="add-btn">＋</button>
     </div>
-    <button class="btn-share" id="share-btn">🔗 このリストのURLを共有（コピー）</button>
   </div>
 
-  <div class="card" id="freq-card" style="display:none">
-    <div class="section-label">🔁 よく買うもの（タップで追加）</div>
-    <div class="freq-wrap" id="freq-wrap"></div>
-  </div>
-
-  <div id="lists"></div>
-</main>
-
-<div class="toast" id="toast"></div>
+</div>
 
 <!-- ニックネーム設定モーダル -->
 <div class="modal-overlay" id="nickname-modal">
@@ -260,11 +249,11 @@
     <div class="modal-title" id="cat-modal-title">カテゴリを変更</div>
     <div class="modal-row">
       <label>店タイプ</label>
-      <select id="cat-store" style="width:100%"></select>
+      <select id="cat-store"></select>
     </div>
     <div class="modal-row">
       <label>売り場カテゴリ</label>
-      <select id="cat-category" style="width:100%"></select>
+      <select id="cat-category"></select>
     </div>
     <div class="modal-btns">
       <button class="btn-secondary" id="cat-cancel">キャンセル</button>
@@ -282,10 +271,18 @@
 
   var STORE_CATEGORIES = {};
   var STORE_ORDER = [];
+  var STORE_ICONS = { 'スーパー': '🥬', 'ドラッグストア': '💊', '百均': '💯', 'モール系': '🏬' };
+  function storeIcon(store) { return STORE_ICONS[store] || '🛍'; }
+
   var nickname = localStorage.getItem('shopping_nickname') || '';
+  var currentFilter = localStorage.getItem('shopping_filter') || 'all';
   var currentData = { items: [], frequent: [] };
   var editingItemId = null;
   var pollTimer = null;
+  var toastTimer = null;
+
+  // id -> { timer, item } : チェック猶予中（2秒）のアイテム。render() をまたいで保持する。
+  var pending = {};
 
   var $ = function(id) { return document.getElementById(id); };
 
@@ -293,17 +290,33 @@
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  function escJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 
-  function showToast(msg) {
+  // ---- トースト（メッセージのみ or undo アクション付き） ----
+  function showToast(msg, opts) {
+    opts = opts || {};
+    clearTimeout(toastTimer);
     var el = $('toast');
-    el.textContent = msg;
+    $('toast-msg').textContent = msg;
+    var actionBtn = $('toast-action');
+    if (opts.actionLabel && opts.onAction) {
+      actionBtn.textContent = opts.actionLabel;
+      actionBtn.style.display = '';
+      actionBtn.onclick = function() {
+        opts.onAction();
+        el.classList.remove('show');
+      };
+    } else {
+      actionBtn.style.display = 'none';
+      actionBtn.onclick = null;
+    }
     el.classList.add('show');
-    setTimeout(function(){ el.classList.remove('show'); }, 1800);
+    toastTimer = setTimeout(function() { el.classList.remove('show'); }, opts.duration || 2000);
   }
 
   // ---- 初期化 ----
   fetch('/api/version').then(function(r){ return r.json(); }).then(function(d){
-    $('deploy-info').textContent = 'deployed: ' + d.deployed_at;
+    $('deploy-footer').textContent = 'deployed: ' + d.deployed_at;
   }).catch(function(){});
 
   fetch('/api/meta').then(function(r){ return r.json(); }).then(function(d){
@@ -329,6 +342,8 @@
     fetch('/api/list/' + listId)
       .then(function(r){ return r.json(); })
       .then(function(data) {
+        // render 前に状態退避: 入力中テキスト・フィルタ選択(currentFilter)・チェック猶予中(pending)は
+        // currentData とは別に保持しているため、ここで上書きしても消えない。
         currentData = data;
         render();
       })
@@ -336,18 +351,40 @@
   }
 
   function render() {
+    renderProgress();
+    renderFilters();
     renderFrequent();
     renderItems();
   }
 
+  function renderProgress() {
+    var n = (currentData.items || []).length;
+    $('progress').innerHTML = n === 0 ? '全部そろいました 🎉' : 'あと <b>' + n + '</b> 件';
+  }
+
+  function renderFilters() {
+    var items = currentData.items || [];
+    var total = items.length;
+    var html = '<button class="fchip' + (currentFilter === 'all' ? ' on' : '') + '" onclick="setFilter(\'all\')">全部 <span class="n">' + total + '</span></button>';
+    STORE_ORDER.forEach(function(store) {
+      var cnt = items.filter(function(it){ return it.store === store; }).length;
+      html += '<button class="fchip' + (currentFilter === store ? ' on' : '') + '" onclick="setFilter(\'' + escJs(store) + '\')">'
+        + storeIcon(store) + ' ' + esc(store) + ' <span class="n">' + cnt + '</span></button>';
+    });
+    $('filters').innerHTML = html;
+  }
+
+  function setFilter(store) {
+    currentFilter = store;
+    localStorage.setItem('shopping_filter', store);
+    render();
+  }
+
   function renderFrequent() {
     var freq = currentData.frequent || [];
-    var card = $('freq-card');
     var wrap = $('freq-wrap');
-    if (!freq.length) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
     wrap.innerHTML = freq.map(function(f) {
-      return '<button class="freq-chip" onclick="quickAdd(\'' + esc(f.name).replace(/'/g,"\\'") + '\')">＋ ' + esc(f.name) + '</button>';
+      return '<button class="freq-chip" onclick="quickAdd(\'' + escJs(f.name) + '\')">＋ ' + esc(f.name) + '</button>';
     }).join('');
   }
 
@@ -355,34 +392,35 @@
     var el = $('lists');
     var items = currentData.items || [];
     if (!items.length) {
-      el.innerHTML = '<div class="empty-hint">買うものがありません。上の入力欄から追加してください🛒</div>';
+      el.innerHTML = '<div class="empty-hint">買うものがありません。下の入力欄から追加してください🛒</div>';
       return;
     }
 
     var html = '';
     STORE_ORDER.forEach(function(store) {
+      if (currentFilter !== 'all' && currentFilter !== store) return;
       var storeItems = items.filter(function(it){ return it.store === store; });
       if (!storeItems.length) return;
-      html += '<div class="store-section"><div class="store-title">' + esc(store) + '</div>';
+      html += '<div class="store-head">' + storeIcon(store) + ' ' + esc(store) + ' <span class="cnt">' + storeItems.length + '件</span></div>';
       (STORE_CATEGORIES[store] || []).forEach(function(cat) {
         var catItems = storeItems.filter(function(it){ return it.category === cat; });
         if (!catItems.length) return;
-        html += '<div class="cat-group"><div class="cat-title">' + esc(cat) + '</div>';
+        html += '<div class="cat-title">' + esc(cat) + '</div>';
         catItems.forEach(function(it) {
-          html += '<div class="item-row">'
-            + '<div class="item-check" onclick="checkItem(\'' + it.id + '\', this)">✓</div>'
-            + '<div class="item-main">'
-            + '<div class="item-name">' + esc(it.name) + '</div>'
-            + '<div class="item-meta">' + (it.added_by ? esc(it.added_by) + ' が追加' : '') + '</div>'
+          var isPending = !!pending[it.id];
+          html += '<div class="item' + (isPending ? ' checked' : '') + '">'
+            + '<div class="check" onclick="checkItem(\'' + it.id + '\')">✓</div>'
+            + '<div class="imain">'
+            + '<div class="name">' + esc(it.name) + '</div>'
+            + '<div class="meta">' + (it.added_by ? esc(it.added_by) + ' が追加' : '')
+            + (isPending ? ' ・ 2秒後に消えます（再タップで取消）' : '') + '</div>'
             + '</div>'
-            + '<button class="item-cat-btn" onclick="openCatModal(\'' + it.id + '\')">' + esc(it.category) + ' ▾</button>'
+            + '<button class="catpill" onclick="openCatModal(\'' + it.id + '\')">' + esc(it.category) + ' ▾</button>'
             + '</div>';
         });
-        html += '</div>';
       });
-      html += '</div>';
     });
-    el.innerHTML = html || '<div class="empty-hint">買うものがありません。上の入力欄から追加してください🛒</div>';
+    el.innerHTML = html || '<div class="empty-hint">この絞り込みに該当する商品はありません</div>';
   }
 
   // ---- 商品追加 ----
@@ -424,18 +462,62 @@
       currentData = data;
       render();
       showToast('✓ ' + name + ' を追加');
-    });
+    })
+    .catch(function(){ showToast('⚠ 通信エラー'); });
   }
 
-  // ---- チェック（購入済み） ----
-  function checkItem(id, el) {
-    el.classList.add('checking');
+  // ---- チェック（購入済み）: checked付与 → 2秒猶予 → API送信 → undoトースト ----
+  function checkItem(id) {
+    if (pending[id]) {
+      // 猶予中の再タップ = 取消（API送信しない）
+      clearTimeout(pending[id].timer);
+      delete pending[id];
+      renderItems();
+      return;
+    }
+    var item = (currentData.items || []).find(function(it){ return it.id === id; });
+    if (!item) return;
+    pending[id] = {
+      item: item,
+      timer: setTimeout(function(){ commitCheck(id); }, 2000)
+    };
+    renderItems();
+  }
+
+  function commitCheck(id) {
+    var entry = pending[id];
+    if (!entry) return;
+    delete pending[id];
+    var itemSnapshot = entry.item;
     fetch('/api/list/' + listId + '/items/' + id + '/check', { method: 'POST' })
       .then(function(r){ return r.json(); })
       .then(function(data) {
         currentData = data;
         render();
-      });
+        showToast(itemSnapshot.name + ' をチェックしました', {
+          actionLabel: '元に戻す',
+          duration: 4000,
+          onAction: function(){ undoCheck(itemSnapshot); }
+        });
+      })
+      .catch(function(){ showToast('⚠ 通信エラー'); render(); });
+  }
+
+  function undoCheck(item) {
+    // check API に undo が無いため、楽観的にローカル復元＋frequent/add API で再登録する。
+    fetch('/api/list/' + listId + '/frequent/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name: item.name, nickname: nickname })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast('⚠ ' + data.error); return; }
+      currentData = data;
+      render();
+      showToast('✓ 元に戻しました');
+    })
+    .catch(function(){ showToast('⚠ 通信エラー'); });
   }
 
   // ---- カテゴリ変更 ----
@@ -475,7 +557,8 @@
       currentData = data;
       render();
       $('cat-modal').classList.remove('open');
-    });
+    })
+    .catch(function(){ showToast('⚠ 通信エラー'); });
   };
 
   // ---- 共有 ----
